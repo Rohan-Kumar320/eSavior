@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
-class add_ambulance_driver extends StatefulWidget {
-  const add_ambulance_driver({super.key});
+class AddAmbulanceDriver extends StatefulWidget {
+  const AddAmbulanceDriver({super.key});
 
   @override
-  State<add_ambulance_driver> createState() => _add_ambulance_driverState();
+  State<AddAmbulanceDriver> createState() => _AddAmbulanceDriverState();
 }
 
-class _add_ambulance_driverState extends State<add_ambulance_driver> {
+class _AddAmbulanceDriverState extends State<AddAmbulanceDriver> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -19,29 +21,38 @@ class _add_ambulance_driverState extends State<add_ambulance_driver> {
   final TextEditingController _idCardController = TextEditingController();
   String? _selectedGender;
   final _firestore = FirebaseFirestore.instance;
+  final _auth = FirebaseAuth.instance;
 
+  // Add driver in Firestore and Authentication
   void _addDriver() async {
     final uuid = Uuid();
-    final userId = uuid.v4();
     final now = DateTime.now().toLocal(); // Get the current date and time
     final date = '${now.year}-${now.month}-${now.day}'; // Format date as YYYY-MM-DD
-    final time = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
+    final time = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
 
     try {
+      // Register the user in Firebase Authentication
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+      final userId = userCredential.user?.uid ?? uuid.v4();
+
+      // Save additional driver details in Firestore
       await _firestore.collection('drivers').doc(userId).set({
         'userId': userId,
         'name': _nameController.text,
         'email': _emailController.text,
-        'password': _passwordController.text,
         'mobile': _mobileController.text,
         'gender': _selectedGender,
         'address': _addressController.text,
         'area': _areaController.text,
         'id_card': _idCardController.text,
-        'date': date, // Add the formatted date
-        'time': time, // Add the formatted time
+        'date': date,
+        'time': time,
       });
 
+      // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Driver added successfully!')),
       );
@@ -58,7 +69,7 @@ class _add_ambulance_driverState extends State<add_ambulance_driver> {
         _selectedGender = null;
       });
     } catch (e) {
-      print(e);
+      // Show error message if something goes wrong
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to add driver: $e')),
       );
@@ -75,8 +86,6 @@ class _add_ambulance_driverState extends State<add_ambulance_driver> {
         title: Text("Add Drivers"),
         centerTitle: true,
       ),
-
-
       body: SingleChildScrollView(
         child: Container(
           margin: EdgeInsets.only(left: width * 0.1),
@@ -84,7 +93,7 @@ class _add_ambulance_driverState extends State<add_ambulance_driver> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SizedBox(height: height * 0.06),
-              Text("Add Drivers Details", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              Text("Add Driver Details", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               SizedBox(height: height * 0.08),
 
               SizedBox(
@@ -109,6 +118,7 @@ class _add_ambulance_driverState extends State<add_ambulance_driver> {
                 width: width * 0.8,
                 child: TextFormField(
                   controller: _passwordController,
+                  obscureText: true,  // Hides the password text
                   decoration: InputDecoration(label: Text('Enter Your Password')),
                 ),
               ),

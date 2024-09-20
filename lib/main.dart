@@ -1,4 +1,5 @@
 import 'package:e_savior/AdminDashboard/add_ambulances.dart';
+import 'package:e_savior/SplashScreens/SplashScreen.dart';
 import 'package:e_savior/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +21,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: AddAmbulances(),
+      home: SplashScreen(),
     );
   }
 }

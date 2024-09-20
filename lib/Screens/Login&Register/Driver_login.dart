@@ -1,3 +1,5 @@
+import 'package:e_savior/DriverPanel/DriverPanel.dart';
+import 'package:e_savior/Patient/UserForm.dart';
 import 'package:e_savior/Screens/InitialScreens/Home.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -51,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomeScreen()),
+          MaterialPageRoute(builder: (context) => DriverAdminPage()),
         );
       } on FirebaseAuthException catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(

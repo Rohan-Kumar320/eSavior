@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:e_savior/AdminDashboard/add_ambulances.dart';
 import 'package:e_savior/DriverPanel/DriverPanel.dart';
+import 'package:e_savior/Screens/Login&Register/Login.dart';
 import 'package:e_savior/home.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -81,7 +82,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void goToRegister() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => RegisterScreen()),
+      MaterialPageRoute(builder: (context) => LoginScreen_driver()),
     );
   }
 
@@ -284,7 +285,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 TextButton(
                   onPressed: goToRegister,
                   child: Text(
-                    "Don't have an account? Register",
+                    "Are You A driver? Login here",
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 16,

@@ -80,7 +80,7 @@ class RegisterScreen extends StatelessWidget {
               Center(
                 child: TextButton(
                   onPressed: () {
-                    // Navigate to Login screen
+                     // Navigate to Login screen
                   },
                   child: Text(
                     'Already have an account? Login',

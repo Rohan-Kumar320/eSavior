@@ -258,6 +258,7 @@ class DriverAdminPage extends StatelessWidget {
         'longitude' : patientInfo['longitude'],
         'latitude' : patientInfo['latitude'],
         'details' : patientInfo['details'],
+        'request_type' : patientInfo['request_type'],
         'driverId': driverId,
         'driverName': driverName,
         'driverContact': driverContact,
@@ -318,6 +319,7 @@ class DriverAdminPage extends StatelessWidget {
         'longitude' : patientInfo['longitude'],
         'latitude' : patientInfo['latitude'],
         'details' : patientInfo['details'],
+        'request_type' : patientInfo['request_type'],
         'driverId': driverId,
         'driverName': driverName,
         'driverContact': driverContact,
@@ -349,7 +351,7 @@ class DriverAdminPage extends StatelessWidget {
     await FirebaseAuth.instance.signOut();
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => LoginScreen_Driver()), // Navigate to login screen
+      MaterialPageRoute(builder: (context) => DriverLoginScreen()), // Navigate to login screen
     );
   }
 

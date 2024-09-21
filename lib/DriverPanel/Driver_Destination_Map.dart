@@ -167,8 +167,6 @@
 //   }
 // }
 
-
-
 import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -233,40 +231,40 @@ class _DriveMapState extends State<DriveMap> {
             child: _bookings.isEmpty
                 ? const Center(child: CircularProgressIndicator())
                 : ListView.builder(
-              itemCount: _bookings.length,
-              itemBuilder: (context, index) {
-                Map<String, dynamic> booking = _bookings[index];
-                final lat = booking['latitude'];
-                final lng = booking['longitude'];
+                    itemCount: _bookings.length,
+                    itemBuilder: (context, index) {
+                      Map<String, dynamic> booking = _bookings[index];
+                      final lat = booking['latitude'];
+                      final lng = booking['longitude'];
 
-                return ListTile(
-                  title: Text('Destination: ${booking['address']}'),
-                  subtitle: Text('Hospital: ${booking['hospitalName']}'),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.phone_outlined),
-                        onPressed: () {
-                          String phoneNumber = booking['mobileNumber'];
-                          _launchPhoneDialer(phoneNumber); // Call to launch dialer
-                          log(phoneNumber);
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.directions),
-                        onPressed: () {
-                          _launchGoogleMapsDirections(
-                              context, '$lat,$lng');
-                        },
-                      ),
-                    ],
+                      return ListTile(
+                        title: Text('Destination: ${booking['address']}'),
+                        subtitle: Text('Hospital: ${booking['hospitalName']}'),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.phone_outlined),
+                              onPressed: () {
+                                String phoneNumber = booking['mobileNumber'];
+                                _launchPhoneDialer(
+                                    phoneNumber); // Call to launch dialer
+                                log(phoneNumber);
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.directions),
+                              onPressed: () {
+                                _launchGoogleMapsDirections(
+                                    context, '$lat,$lng');
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
-
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: _firestore
@@ -281,7 +279,8 @@ class _DriveMapState extends State<DriveMap> {
                   return const Center(child: Text('Error fetching requests'));
                 }
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Center(child: Text('No ambulance requests available'));
+                  return const Center(
+                      child: Text('No ambulance requests available'));
                 }
 
                 final requests = snapshot.data!.docs;
@@ -290,7 +289,7 @@ class _DriveMapState extends State<DriveMap> {
                   itemCount: requests.length,
                   itemBuilder: (context, index) {
                     final request =
-                    requests[index].data() as Map<String, dynamic>;
+                        requests[index].data() as Map<String, dynamic>;
                     final lat = request['latitude'];
                     final lng = request['longitude'];
                     final details = request['details'];
@@ -298,7 +297,8 @@ class _DriveMapState extends State<DriveMap> {
 
                     return ListTile(
                       title: Text('Request from $location'),
-                      subtitle: Text('Details: $details\nLat: $lat, Long: $lng'),
+                      subtitle:
+                          Text('Details: $details\nLat: $lat, Long: $lng'),
                       trailing: IconButton(
                         icon: const Icon(Icons.directions),
                         onPressed: () {
@@ -319,14 +319,17 @@ class _DriveMapState extends State<DriveMap> {
   // Function to launch Google Maps with directions
   Future<void> _launchGoogleMapsDirections(
       BuildContext context, String latLng) async {
+
     final Uri url = Uri.parse(
         'https://www.google.com/maps/dir/$currentPositionLatitude,$currentPositionLongitude/$latLng');
 
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
+    if (await launchUrl(url)) {
+      debugPrint(currentPositionLatitude + "  " + currentPositionLongitude);
+      print("object");
+      await launchUrl(url, mode: LaunchMode.inAppWebView);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not launch Google Maps')),
+        const SnackBar(content: Text('Could not launch Google Maps')),
       );
     }
   }

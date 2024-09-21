@@ -1,3 +1,4 @@
+import 'package:e_savior/Patient/UserForm.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
@@ -190,10 +191,15 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
-          _buildStack(
-            imageUrl: 'https://media.istockphoto.com/id/1423103191/vector/ambulance-solid-icon.jpg?s=612x612&w=0&k=20&c=o4VWSaC9qjQezsjR00fy4nUT3YBx-9T9B6ptc-moB9M=',
-            title: 'Ambulance',
-            count: '20 ambulances',
+          InkWell(
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => UserAmbulanceFormScreen(),));
+            } ,
+            child: _buildStack(
+              imageUrl: 'https://media.istockphoto.com/id/1423103191/vector/ambulance-solid-icon.jpg?s=612x612&w=0&k=20&c=o4VWSaC9qjQezsjR00fy4nUT3YBx-9T9B6ptc-moB9M=',
+              title: 'Book An Ambulance',
+              count: '20 ambulances',
+            ),
           ),
           SizedBox(height: 16.0),
           _buildStack(

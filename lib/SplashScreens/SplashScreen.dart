@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:developer';
 import 'package:e_savior/DriverPanel/DriverPanel.dart';
+import 'package:e_savior/Screens/InitialScreens/BottomNavbar.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Firebase Authentication
+import 'package:cloud_firestore/cloud_firestore.dart'; // Firebase Firestore
 import 'OnBoarding.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -13,34 +16,79 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  Future getUser() async {
-    //   Using Shared Prefrenes
-    SharedPreferences userCred = await SharedPreferences.getInstance();
-    var userEmail = userCred.getString("email");
-    debugPrint('user Email: $userEmail');
-    return userEmail;
+  Future<void> getUserAndNavigate() async {
+    // Check if a user is signed in
+    User? currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser != null && currentUser.email != null) {
+      String userEmail = currentUser.email!;
+
+      log(userEmail);
+      try {
+        // Query 'users' collection where email matches
+        QuerySnapshot userSnapshot = await FirebaseFirestore.instance
+            .collection('users')
+            .where('email', isEqualTo: userEmail)
+            .limit(1)
+            .get();
+
+        // Query 'drivers' collection where email matches
+        QuerySnapshot driverSnapshot = await FirebaseFirestore.instance
+            .collection('drivers')
+            .where('email', isEqualTo: userEmail)
+            .limit(1)
+            .get();
+
+        if (userSnapshot.docs.isNotEmpty) {
+          // User found in the 'users' collection
+          Timer(const Duration(milliseconds: 3000), () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => BottomNavbar()),
+            );
+          });
+        } else if (driverSnapshot.docs.isNotEmpty) {
+          // User found in the 'drivers' collection
+          Timer(const Duration(milliseconds: 3000), () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => DriverAdminPage()),
+            );
+          });
+        } else {
+          // No user found in either collection, go to OnBoarding
+          Timer(const Duration(milliseconds: 3000), () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => OnBoarding()),
+            );
+          });
+        }
+      } catch (e) {
+        print("Error checking user: $e");
+        // If there was an error, navigate to OnBoarding
+        Timer(const Duration(milliseconds: 3000), () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => OnBoarding()),
+          );
+        });
+      }
+    } else {
+      // No user signed in, navigate to OnBoarding
+      Timer(const Duration(milliseconds: 3000), () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => OnBoarding()),
+        );
+      });
+    }
   }
 
   @override
   void initState() {
-    getUser().then((value) => {
-      if (value != null)
-        {
-          // Mean  3_Second
-          Timer(const Duration(milliseconds: 3000), () {
-            Navigator.pushReplacement(
-                context, MaterialPageRoute(builder: (context) => DriverAdminPage()));
-          })
-        }
-      else
-        {
-          Timer(const Duration(milliseconds: 3000), () {
-            Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (context) => OnBoarding()));
-          })
-        }
-    });
     super.initState();
+    getUserAndNavigate(); // Call the method on initState
   }
 
   @override
@@ -48,25 +96,26 @@ class _SplashScreenState extends State<SplashScreen> {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-            gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.red.shade300,
-                  Colors.red.shade500,
-                  Colors.red.shade800,
-                ])),
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.red.shade300,
+              Colors.red.shade500,
+              Colors.red.shade800,
+            ],
+          ),
+        ),
         child: Column(
           children: [
-            const SizedBox(
-              height: 60,
-            ),
+            const SizedBox(height: 60),
             Center(
               child: SizedBox(
                 height: 499,
-                width: double.infinity, // Adapt width to screen size
+                width: double.infinity,
                 child: Lottie.network(
-                    'https://lottie.host/25960982-183a-4ff1-87e9-87fd8bf9bb41/UfqxTWhfdU.json'),
+                  'https://lottie.host/25960982-183a-4ff1-87e9-87fd8bf9bb41/UfqxTWhfdU.json',
+                ),
               ),
             ),
             const Center(
@@ -74,7 +123,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 'eAmbulace',
                 style: TextStyle(
                   fontFamily: 'Libre',
-                  fontWeight: FontWeight.bold, // Uncommented to make text bold
+                  fontWeight: FontWeight.bold,
                   fontSize: 35,
                   color: Colors.white,
                 ),

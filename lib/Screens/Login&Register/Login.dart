@@ -1,9 +1,14 @@
+import 'dart:ui';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:e_savior/Patient/UserForm.dart';
+import 'package:e_savior/Screens/InitialScreens/BottomNavbar.dart';
 import 'package:e_savior/Screens/InitialScreens/Home.dart';
 import 'package:e_savior/Screens/Login&Register/Driver_login.dart';
+import 'package:e_savior/Screens/Login&Register/Register.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -13,6 +18,8 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
   bool isHide = true;
 
   @override
@@ -22,100 +29,268 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> userLogin() async {
-    String email = emailController.text;
-    String password = passwordController.text;
+  Future<void> patientLogin() async {
+    String email = emailController.text.trim();
+    String password = passwordController.text.trim();
 
-    if (email == "admin@gmail.com" && password == "admin@123") {
+    // Firestore query to check if driver with given email and password exists
+    QuerySnapshot snapshot = await _firestore
+        .collection('users')
+        .where('email', isEqualTo: email)
+        .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      // Login successful
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login successful')),
+        SnackBar(content: Text("Login successful")),
       );
-      // Navigator.pushReplacement(
-      //   context,
-      //   MaterialPageRoute(builder: (context) => Admindashboard()),
-      // );
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => BottomNavbar()),
+      );
+      // Navigate to driver panel or home screen
     } else {
-      try {
-        await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: email,
-          password: password,
-        );
-
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setString('userEmail', email);
-
-        emailController.clear();
-        passwordController.clear();
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login successful')),
-        );
-
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => UserAmbulanceFormScreen()),
-        );
-      } on FirebaseAuthException catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.message}')),
-        );
-      }
+      // Login failed
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Invalid email or password")),
+      );
     }
   }
 
   void goToRegister() {
-    // Navigator.push(
-    //   context,
-    //   MaterialPageRoute(builder: (context) => RegisterScreen()),
-    // );
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => RegisterScreen()),
+    );  }
+
+  void goToDriver(){
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => DriverLoginScreen()),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final screenWidth = mediaQuery.size.width;
+    final screenHeight = mediaQuery.size.height;
+
     return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text('Welcome to BabyShopHub!'),
-              TextField(
-                controller: emailController,
-                decoration: InputDecoration(
-                  labelText: 'Email Address',
+      body: Stack(
+        children: [
+          Positioned(
+            bottom: 100,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: screenHeight * 0.999,
+              child: Center(
+                child: Image.network(
+                  "https://cdn.pixabay.com/photo/2021/09/17/21/39/nurse-6633761_960_720.png",
+                  height: screenWidth * 0.99,
+                  width: screenWidth * 0.9,
                 ),
               ),
-              TextField(
-                controller: passwordController,
-                obscureText: isHide,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  suffixIcon: IconButton(
-                    icon: Icon(isHide ? Icons.visibility : Icons.visibility_off),
-                    onPressed: () {
-                      setState(() {
-                        isHide = !isHide;
-                      });
-                    },
+            ),
+          ),
+          Positioned(
+            top: screenHeight * 0.1,
+            left: 0,
+            right: 0,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+              child: Center(
+                child: RichText(
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: 'Welcome to ',
+                        style: TextStyle(
+                          fontSize: screenWidth * 0.07,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                          fontStyle: FontStyle.normal,
+                        ),
+                      ),
+                      TextSpan(
+                        text: 'eSavior Login!',
+                        style: TextStyle(
+                          fontSize: screenWidth * 0.07,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.redAccent,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: userLogin,
-                child: Text('Login'),
-              ),
-
-
-          SizedBox(width: 20),
-          ElevatedButton(
-            onPressed: (){Navigator.push(context, MaterialPageRoute(builder: (context) => LoginScreen_Driver(),));},
-            child: Text('Login'),
-              )
-            ],
+            ),
           ),
-        ),
+          Positioned(
+            bottom: screenHeight * 0.26,
+            left: screenWidth * 0.05,
+            right: screenWidth * 0.05,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.3),
+                          spreadRadius: 2,
+                          blurRadius: 8,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: TextField(
+                      controller: emailController,
+                      decoration: InputDecoration(
+                        labelText: 'Email Address',
+                        labelStyle: TextStyle(color: Colors.black),
+                        prefixIcon: Icon(Icons.email, color: Colors.black),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                      ),
+                      style: TextStyle(color: Colors.black),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.3),
+                          spreadRadius: 2,
+                          blurRadius: 8,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: TextField(
+                      controller: passwordController,
+                      obscureText: isHide,
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        labelStyle: TextStyle(color: Colors.black),
+                        prefixIcon: Icon(Icons.lock, color: Colors.black),
+                        suffixIcon: IconButton(
+                          icon: isHide ? Icon(Icons.visibility) : Icon(Icons.visibility_off),
+                          onPressed: () {
+                            setState(() {
+                              isHide = !isHide;
+                            });
+                          },
+                          color: Colors.black,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                      ),
+                      style: TextStyle(color: Colors.black),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: screenHeight * 0.01,
+            left: screenWidth * 0.05,
+            right: screenWidth * 0.05,
+            child: Column(
+              children: [
+                ElevatedButton(
+                  onPressed: patientLogin,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    padding: EdgeInsets.symmetric(vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    elevation: 5,
+                    minimumSize: Size(140, 60),
+                  ),
+                  child: Text(
+                    'Login',
+                    style: TextStyle(fontSize: 20, color: Colors.white),
+                  ),
+                ),
+                SizedBox(height: 10),
+                TextButton(
+                  onPressed: () {
+                    // Navigator.push(
+                    //   context,
+                    //   MaterialPageRoute(builder: (context) => ForgotPassword()),
+                    // );
+                  },
+
+                  child: Text(
+                    "Forgot password?",
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 10),
+                TextButton(
+                  onPressed: goToRegister,
+                  child: Text(
+                    "Not a user? Register here",
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 10),
+                TextButton(
+                  onPressed: goToDriver,
+                  child: Text(
+                    "If you are a driver? Login here",
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

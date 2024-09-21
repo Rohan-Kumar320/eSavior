@@ -185,14 +185,15 @@ class _UserAmbulanceFormScreenState extends State<UserAmbulanceFormScreen> {
   final TextEditingController _hospitalNameController = TextEditingController();
   final TextEditingController _mobileNumberController = TextEditingController();
   final TextEditingController _zipCodeController = TextEditingController();
-  final TextEditingController _detailsController = TextEditingController(); // Controller for request details
+  final TextEditingController _detailsController = TextEditingController();
 
   String? _selectedIdCard; // To store selected ID card
+  String? _selectedRequestType; // To store selected emergency type
   List<String> _idCardList = []; // To store fetched ID cards
   bool _isLoading = true; // To show loading state
   final Uuid uuid = Uuid(); // UUID generator
 
-  // Predefined Karachi locations with latitudes and longitudes
+  // Predefined locations with latitudes and longitudes
   final List<Map<String, String>> _locations = [
     {'name': 'Clifton', 'lat': '24.8138', 'lng': '67.0281'},
     {'name': 'Gulshan-e-Iqbal', 'lat': '24.9244', 'lng': '67.0822'},
@@ -252,9 +253,9 @@ class _UserAmbulanceFormScreenState extends State<UserAmbulanceFormScreen> {
 
   // Submit form and save request in Firestore
   void _submitForm() async {
-    if (_selectedIdCard == null || _selectedLocation == null) {
+    if (_selectedIdCard == null || _selectedLocation == null || _selectedRequestType == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please select an ID card and a location')),
+        SnackBar(content: Text('Please select an ambulance, location, and request type')),
       );
       return;
     }
@@ -266,18 +267,19 @@ class _UserAmbulanceFormScreenState extends State<UserAmbulanceFormScreen> {
     String formattedTime = DateFormat('HH:mm:ss').format(DateTime.now());
 
     await FirebaseFirestore.instance.collection('pendingRequests').add({
-      'userId': generatedUserId, // Add generated userId
+      'userId': generatedUserId,
       'patientName': _patientNameController.text,
       'hospitalName': _hospitalNameController.text,
       'mobileNumber': _mobileNumberController.text,
       'zipCode': _zipCodeController.text,
-      'ambulance_type': _selectedIdCard, // Add selected ID card to request
-      'location': _selectedLocation, // Add selected location
+      'ambulance_type': _selectedIdCard,
+      'location': _selectedLocation,
       'latitude': _selectedLat,
       'longitude': _selectedLng,
+      'request_type': _selectedRequestType,
       'details': _detailsController.text,
-      'status': 'pending', // Initial status
-      'date_added': formattedDate, // Store date separately
+      'status': 'pending',
+      'date_added': formattedDate,
       'time_added': formattedTime,
     });
 
@@ -289,7 +291,8 @@ class _UserAmbulanceFormScreenState extends State<UserAmbulanceFormScreen> {
     _detailsController.clear();
     setState(() {
       _selectedIdCard = null;
-      _selectedLocation = null; // Reset selected fields
+      _selectedLocation = null;
+      _selectedRequestType = null; // Reset selected fields
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -302,15 +305,17 @@ class _UserAmbulanceFormScreenState extends State<UserAmbulanceFormScreen> {
     await FirebaseAuth.instance.signOut();
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => LoginScreen_Driver()),
+      MaterialPageRoute(builder: (context) => DriverLoginScreen()),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Ambulance Request Form'),
+        title: Text('Patient Ambulance Request'),
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
@@ -318,78 +323,168 @@ class _UserAmbulanceFormScreenState extends State<UserAmbulanceFormScreen> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: _isLoading
-            ? Center(child: CircularProgressIndicator()) // Show loading spinner
-            : SingleChildScrollView(
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextFormField(
-                controller: _patientNameController,
-                decoration: InputDecoration(labelText: 'Patient Name'),
-              ),
-              TextFormField(
-                controller: _hospitalNameController,
-                decoration: InputDecoration(labelText: 'Hospital Name'),
-              ),
-              TextFormField(
-                controller: _mobileNumberController,
-                decoration: InputDecoration(labelText: 'Mobile Number'),
-              ),
-
-              TextFormField(
-                controller: _zipCodeController,
-                decoration: InputDecoration(labelText: 'Zip Code'),
-              ),
-              TextField(
-                controller: _detailsController,
-                decoration: InputDecoration(
-                  labelText: 'Details',
-                  hintText: 'Enter details about the request',
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              ),
-              SizedBox(height: 20),
-              DropdownButtonFormField<String>(
-                value: _selectedLocation,
-                decoration: InputDecoration(labelText: 'Select Location'),
-                items: _locations.map((location) {
-                  return DropdownMenuItem<String>(
-                    value: location['name'],
-                    child: Text(location['name']!),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedLocation = value;
-                    final selected = _locations.firstWhere(
-                            (location) => location['name'] == value);
-                    _selectedLat = selected['lat'];
-                    _selectedLng = selected['lng'];
-                  });
-                },
-              ),
-              SizedBox(height: 20),
-              // Dropdown for ID cards
-              DropdownButtonFormField<String>(
-                value: _selectedIdCard,
-                hint: Text('Select Ambulance'),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedIdCard = value;
-                  });
-                },
-                items: _idCardList.map((idCard) {
-                  return DropdownMenuItem<String>(
-                    value: idCard,
-                    child: Text(idCard),
-                  );
-                }).toList(),
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _submitForm,
-                child: Text('Submit Request'),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Request Details',
+                        style: theme.textTheme.titleLarge!
+                            .copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 16),
+                      TextFormField(
+                        controller: _patientNameController,
+                        decoration: InputDecoration(
+                          labelText: 'Patient Name',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      TextFormField(
+                        controller: _hospitalNameController,
+                        decoration: InputDecoration(
+                          labelText: 'Hospital Name',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      TextFormField(
+                        controller: _mobileNumberController,
+                        decoration: InputDecoration(
+                          labelText: 'Mobile Number',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        keyboardType: TextInputType.phone,
+                      ),
+                      SizedBox(height: 16),
+                      TextFormField(
+                        controller: _zipCodeController,
+                        decoration: InputDecoration(
+                          labelText: 'Zip Code',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                      SizedBox(height: 16),
+                      TextFormField(
+                        controller: _detailsController,
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          labelText: 'Details',
+                          hintText: 'Enter additional details...',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      DropdownButtonFormField<String>(
+                        value: _selectedLocation,
+                        decoration: InputDecoration(
+                          labelText: 'Select Location',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        items: _locations.map((location) {
+                          return DropdownMenuItem<String>(
+                            value: location['name'],
+                            child: Text(location['name']!),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedLocation = value;
+                            final selected = _locations.firstWhere(
+                                    (location) => location['name'] == value);
+                            _selectedLat = selected['lat'];
+                            _selectedLng = selected['lng'];
+                          });
+                        },
+                      ),
+                      SizedBox(height: 20),
+                      DropdownButtonFormField<String>(
+                        value: _selectedIdCard,
+                        hint: Text('Select Ambulance'),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedIdCard = value;
+                          });
+                        },
+                        items: _idCardList.map((idCard) {
+                          return DropdownMenuItem<String>(
+                            value: idCard,
+                            child: Text(idCard),
+                          );
+                        }).toList(),
+                      ),
+                      SizedBox(height: 20),
+                      DropdownButtonFormField<String>(
+                        value: _selectedRequestType,
+                        hint: Text('Select Request Type'),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedRequestType = value;
+                          });
+                        },
+                        items: [
+                          DropdownMenuItem<String>(
+                            value: 'Emergency',
+                            child: Text('Emergency'),
+                          ),
+                          DropdownMenuItem<String>(
+                            value: 'Non-Emergency',
+                            child: Text('Non-Emergency'),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 30),
+                      Center(
+                        child: ElevatedButton(
+                          onPressed: _submitForm,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: theme.primaryColor,
+                            padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                          ),
+                          child: Text('Submit Request', style: TextStyle(fontSize: 18)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),

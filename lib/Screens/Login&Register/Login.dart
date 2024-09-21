@@ -1,4 +1,6 @@
+import 'package:e_savior/Patient/UserForm.dart';
 import 'package:e_savior/Screens/InitialScreens/Home.dart';
+import 'package:e_savior/Screens/Login&Register/Driver_login.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -51,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomeScreen()),
+          MaterialPageRoute(builder: (context) => UserAmbulanceFormScreen()),
         );
       } on FirebaseAuthException catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -104,6 +106,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 onPressed: userLogin,
                 child: Text('Login'),
               ),
+
+
+          SizedBox(width: 20),
+          ElevatedButton(
+            onPressed: (){Navigator.push(context, MaterialPageRoute(builder: (context) => LoginScreen_Driver(),));},
+            child: Text('Login'),
+              )
             ],
           ),
         ),

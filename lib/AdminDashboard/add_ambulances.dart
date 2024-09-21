@@ -10,14 +10,42 @@ class AddAmbulances extends StatefulWidget {
 }
 
 class _AddAmbulancesState extends State<AddAmbulances> {
+
+  // Define the mappings for ambulance type, size, and equipment
+  final Map<String, Map<String, String>> ambulanceDetails = {
+    "Life Support": {
+      "size": "Medium",
+      "equipments": "Oxygen cylinder, Basic life support tools",
+    },
+    "Isolation Ambulance": {
+      "size": "Large",
+      "equipments": "Isolation ward, Oxygen cylinder, PPE kits",
+    },
+    "Mobile ICU ambulance": {
+      "size": "Extra Large",
+      "equipments": "ICU equipment, Ventilator, Defibrillator",
+    },
+    "Helicopter": {
+      "size": "Small",
+      "equipments": "Emergency medical kit, Oxygen support",
+    },
+    "Mva logistics unit": {
+      "size": "Large",
+      "equipments": "First aid, Triage kits, Extrication tools",
+    },
+  };
+
   final TextEditingController _driverNameController = TextEditingController();
   final TextEditingController _driverMobileController = TextEditingController();
   final TextEditingController _driverEmailController = TextEditingController();
+  final TextEditingController _ambulanceSizeController = TextEditingController();
+  final TextEditingController _ambulanceEquipmentsController = TextEditingController();
 
   // Other fields that remain editable
   final TextEditingController _hospitalNameController = TextEditingController();
   final TextEditingController _hospitalAddressController = TextEditingController();
   final TextEditingController _zipCodeController = TextEditingController();
+  final TextEditingController _ambulanceCostController = TextEditingController();
 
   List<String> _idCardList = [];
   String? _selectedIdCard;
@@ -81,12 +109,16 @@ class _AddAmbulancesState extends State<AddAmbulances> {
       'hospital_name': _hospitalNameController.text,
       'hospital_address': _hospitalAddressController.text,
       'ambulance_type': _selectedAmbulanceType,
+      'ambulance_size': _ambulanceSizeController.text,
+      'ambulance_equipments': _ambulanceEquipmentsController.text,
+      'ambulance_cost' : _ambulanceCostController.text,
       'zip_code': _zipCodeController.text,
       'driver_availability': _selectedAvailability,
       'id_card': _selectedIdCard,
-      'date_added': formattedDate,   // Store date separately
-      'time_added': formattedTime,   // Store time separately
+      'date_added': formattedDate, // Store date separately
+      'time_added': formattedTime, // Store time separately
     };
+
 
     // Save the data to Firestore under the 'ambulances' collection
     await FirebaseFirestore.instance.collection('ambulances').add(ambulanceData);
@@ -107,6 +139,9 @@ class _AddAmbulancesState extends State<AddAmbulances> {
     _hospitalNameController.clear();
     _hospitalAddressController.clear();
     _zipCodeController.clear();
+    _ambulanceSizeController.clear();
+    _ambulanceEquipmentsController.clear();
+    _ambulanceCostController.clear();
     setState(() {
       _selectedIdCard = null;
       _selectedAmbulanceType = null;
@@ -218,6 +253,7 @@ class _AddAmbulancesState extends State<AddAmbulances> {
               SizedBox(height: height * 0.06),
 
               // Ambulance Type (Dropdown)
+              // Ambulance Type (Dropdown)
               SizedBox(
                 width: width * 0.8,
                 child: DropdownButtonFormField<String>(
@@ -226,10 +262,15 @@ class _AddAmbulancesState extends State<AddAmbulances> {
                   onChanged: (String? newValue) {
                     setState(() {
                       _selectedAmbulanceType = newValue;
+
+                      // Auto-fill size and equipment fields based on the selected ambulance type
+                      if (newValue != null && ambulanceDetails.containsKey(newValue)) {
+                        _ambulanceSizeController.text = ambulanceDetails[newValue]!['size']!;
+                        _ambulanceEquipmentsController.text = ambulanceDetails[newValue]!['equipments']!;
+                      }
                     });
                   },
-                  items: <String>["Emergency", "Non-Emergency"]
-                      .map<DropdownMenuItem<String>>((String value) {
+                  items: ambulanceDetails.keys.map<DropdownMenuItem<String>>((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
                       child: Text(value),
@@ -237,6 +278,40 @@ class _AddAmbulancesState extends State<AddAmbulances> {
                   }).toList(),
                 ),
               ),
+
+              SizedBox(height: height * 0.06),
+            // Ambulance Size (Auto-filled, non-editable)
+              SizedBox(
+                width: width * 0.8,
+                child: TextFormField(
+                  controller: _ambulanceSizeController,
+                  decoration: InputDecoration(labelText: "Ambulance Size"),
+                  readOnly: true,
+                ),
+              ),
+              SizedBox(height: height * 0.06),
+
+          // Ambulance Equipments (Auto-filled, non-editable)
+              SizedBox(
+                width: width * 0.8,
+                child: TextFormField(
+                  controller: _ambulanceEquipmentsController,
+                  decoration: InputDecoration(labelText: "Ambulance Equipments"),
+                  readOnly: true,
+                ),
+              ),
+
+              SizedBox(height: height * 0.06),
+
+              // Zip Code (Editable)
+              SizedBox(
+                width: width * 0.8,
+                child: TextFormField(
+                  controller: _ambulanceCostController,
+                  decoration: InputDecoration(labelText: "Ambulance Cost"),
+                ),
+              ),
+
               SizedBox(height: height * 0.06),
 
               // Zip Code (Editable)

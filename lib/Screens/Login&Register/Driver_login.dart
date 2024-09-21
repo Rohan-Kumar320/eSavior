@@ -1,14 +1,15 @@
+import 'package:e_savior/DriverPanel/DriverPanel.dart';
 import 'package:e_savior/Screens/InitialScreens/Home.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen_Driver extends StatefulWidget {
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  _LoginScreen_DriverState createState() => _LoginScreen_DriverState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreen_DriverState extends State<LoginScreen_Driver> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool isHide = true;
@@ -51,7 +52,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomeScreen()),
+          MaterialPageRoute(builder: (context) => DriverAdminPage()),
         );
       } on FirebaseAuthException catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -77,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('Welcome to BabyShopHub!'),
+              Text('Welcome to Ambulance!'),
               TextField(
                 controller: emailController,
                 decoration: InputDecoration(

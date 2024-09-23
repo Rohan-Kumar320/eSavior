@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
 
+import '../../Models/user_model.dart';
 import 'Login.dart'; // Import the package
 
 class RegisterScreen extends StatefulWidget {
@@ -15,6 +16,60 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
 
+
+  Future<void> resetPassword(String email) async {
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Password reset email sent',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.message ?? 'Failed to send password reset email',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+      );
+    }
+  }
+
+  void showForgotPasswordDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        TextEditingController resetEmailController = TextEditingController();
+        return AlertDialog(
+          title: Text('Forgot Password'),
+          content: TextField(
+            controller: resetEmailController,
+            decoration: InputDecoration(hintText: 'Enter your email'),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                resetPassword(resetEmailController.text);
+              },
+              child: Text('Send Email'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
   final TextEditingController userNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -51,7 +106,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             "time": formattedTime
           },
         });
-
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('userEmail', email);
 

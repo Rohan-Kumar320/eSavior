@@ -1,11 +1,10 @@
 import 'dart:async';
-import 'dart:developer';
-import 'package:e_savior/DriverPanel/DriverPanel.dart';
+import 'package:e_savior/DriverPanel/DriverPanel.dart'; // Driver's home page
 import 'package:e_savior/Screens/InitialScreens/BottomNavbar.dart';
+import 'package:e_savior/Screens/InitialScreens/Home.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Firebase Authentication
-import 'package:cloud_firestore/cloud_firestore.dart'; // Firebase Firestore
+import 'package:shared_preferences/shared_preferences.dart';
 import 'OnBoarding.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -16,79 +15,41 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  Future<void> getUserAndNavigate() async {
-    // Check if a user is signed in
-    User? currentUser = FirebaseAuth.instance.currentUser;
-
-    if (currentUser != null && currentUser.email != null) {
-      String userEmail = currentUser.email!;
-
-      log(userEmail);
-      try {
-        // Query 'users' collection where email matches
-        QuerySnapshot userSnapshot = await FirebaseFirestore.instance
-            .collection('users')
-            .where('email', isEqualTo: userEmail)
-            .limit(1)
-            .get();
-
-        // Query 'drivers' collection where email matches
-        QuerySnapshot driverSnapshot = await FirebaseFirestore.instance
-            .collection('drivers')
-            .where('email', isEqualTo: userEmail)
-            .limit(1)
-            .get();
-
-        if (userSnapshot.docs.isNotEmpty) {
-          // User found in the 'users' collection
-          Timer(const Duration(milliseconds: 3000), () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => BottomNavbar()),
-            );
-          });
-        } else if (driverSnapshot.docs.isNotEmpty) {
-          // User found in the 'drivers' collection
-          Timer(const Duration(milliseconds: 3000), () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => DriverAdminPage()),
-            );
-          });
-        } else {
-          // No user found in either collection, go to OnBoarding
-          Timer(const Duration(milliseconds: 3000), () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => OnBoarding()),
-            );
-          });
-        }
-      } catch (e) {
-        print("Error checking user: $e");
-        // If there was an error, navigate to OnBoarding
-        Timer(const Duration(milliseconds: 3000), () {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => OnBoarding()),
-          );
-        });
-      }
-    } else {
-      // No user signed in, navigate to OnBoarding
-      Timer(const Duration(milliseconds: 3000), () {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => OnBoarding()),
-        );
-      });
-    }
-  }
-
   @override
   void initState() {
     super.initState();
-    getUserAndNavigate(); // Call the method on initState
+    _navigateToHome();
+  }
+
+  Future<void> _navigateToHome() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? email = prefs.getString('userEmail');
+    String? userType = prefs.getString('usertype');
+
+    // Delay to simulate a splash screen duration
+    await Future.delayed(Duration(seconds: 3));
+
+    if (email != null && userType != null) {
+      if (userType == 'driver') {
+        // Navigate to Driver home page
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => DriverAdminPage()),
+        );
+      } else if (userType == 'user') {
+        // Navigate to User home page
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => BottomNavbar()),
+        );
+      }
+    } else {
+      // If no user is logged in, navigate to the OnBoarding page
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => OnBoarding()),
+      );
+    }
   }
 
   @override
@@ -112,7 +73,7 @@ class _SplashScreenState extends State<SplashScreen> {
             Center(
               child: SizedBox(
                 height: 499,
-                width: double.infinity,
+                width: double.infinity, // Adapt width to screen size
                 child: Lottie.network(
                   'https://lottie.host/25960982-183a-4ff1-87e9-87fd8bf9bb41/UfqxTWhfdU.json',
                 ),
@@ -120,7 +81,7 @@ class _SplashScreenState extends State<SplashScreen> {
             ),
             const Center(
               child: Text(
-                'eAmbulace',
+                'e-Savior',
                 style: TextStyle(
                   fontFamily: 'Libre',
                   fontWeight: FontWeight.bold,

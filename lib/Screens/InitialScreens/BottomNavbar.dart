@@ -1,20 +1,76 @@
+import 'package:e_savior/Models/user_model.dart';
 import 'package:e_savior/Screens/InitialScreens/Home.dart';
+import 'package:e_savior/Screens/InitialScreens/contactus.dart';
+import 'package:e_savior/Screens/InitialScreens/profilepage.dart';
+import 'package:e_savior/Screens/InitialScreens/viewAmbulancesUser.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Firebase Auth
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Firestore
 
 class BottomNavbar extends StatefulWidget {
   @override
-  _BottomNavbarState createState() =>
-      _BottomNavbarState();
+  _BottomNavbarState createState() => _BottomNavbarState();
 }
 
 class _BottomNavbarState extends State<BottomNavbar> {
   int currentIndex = 0;
+  // String? userEmail; // Variable to store the user's email
 
+  // Get the current user's email from Firestore
+  // void getUserEmailFromFirestore() async {
+  //   final user = FirebaseAuth.instance.currentUser;
+  //   if (user != null) {
+  //     // Fetch user data from 'users' collection in Firestore based on UID
+  //     DocumentSnapshot userDoc = await FirebaseFirestore.instance
+  //         .collection('users')
+  //         .doc(user.uid)
+  //         .get();
+  //
+  //     // Check if the document exists and fetch the email
+  //     if (userDoc.exists) {
+  //       setState(() {
+  //         userEmail = userDoc['email']; // Fetch the 'email' field from Firestore
+  //       });
+  //     } else {
+  //       // Handle case where user document does not exist
+  //       print("User document does not exist");
+  //     }
+  //   }
+  // }
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   getUserEmailFromFirestore();
+  //   // Fetch user email from Firestore on init
+  //
+  // }
+  final UserModel userModel =UserModel();
+  // List of pages corresponding to each index
+  String? email;
+  getString()async{
+    final SharedPreferences _prefs =await SharedPreferences.getInstance();
+    email= _prefs.getString("userEmail");
+  }
+  List<Widget> _screens() {
+    return [
+      HomeScreen(), // Index 0 - Home Screen
+      ViewAmbulances(),
+      UserProfilePage(),// Index 1 - Timer Screen
+      Contactus(), // Index 3 - Contact Us Screen
+    ];
+  }
+@override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getString();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Add your main body content here
+      body: _screens()[currentIndex], // Display the screen based on current index
       bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
@@ -42,7 +98,7 @@ class _BottomNavbarState extends State<BottomNavbar> {
           children: <Widget>[
             _buildNavBarItem(icon: CupertinoIcons.home, index: 0),
             _buildNavBarItem(icon: CupertinoIcons.timer, index: 1),
-            _buildNavBarItem(icon: CupertinoIcons.bell, index: 2),
+            _buildNavBarItem(icon: CupertinoIcons.person, index: 2),
             _buildNavBarItem(icon: CupertinoIcons.calendar, index: 3),
           ],
         ),
@@ -56,12 +112,6 @@ class _BottomNavbarState extends State<BottomNavbar> {
         setState(() {
           currentIndex = index;
         });
-        if (index == 0) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => HomeScreen()),
-          );
-        }
       },
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

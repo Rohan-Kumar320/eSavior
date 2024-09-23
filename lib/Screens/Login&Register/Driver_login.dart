@@ -207,12 +207,15 @@ class _DriverLoginScreenState extends State<DriverLoginScreen> {
 
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('userEmail', email);
+        await prefs.setString('usertype', 'driver');
+
+        String? value = prefs.getString('usertype');
 
         emailController.clear();
         passwordController.clear();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login successful')),
+          SnackBar(content: Text('Login successful $value')),
         );
 
         Navigator.pushReplacement(

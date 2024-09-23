@@ -217,7 +217,6 @@ class _UserAmbulanceFormScreenState extends State<UserAmbulanceFormScreen> {
     {'name': 'Karimabad', 'lat': '24.9113', 'lng': '67.0699'}
   ];
 
-
   String? _selectedLocation;
   String? _selectedLat;
   String? _selectedLng;
@@ -249,6 +248,78 @@ class _UserAmbulanceFormScreenState extends State<UserAmbulanceFormScreen> {
         _isLoading = false; // Stop loading even if an error occurs
       });
     }
+  }
+
+  // Custom VIP alert dialog
+  void _showCustomDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ), // Rounded corners for the dialog
+          elevation: 12,
+          child: Container(
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20.0),
+              color: Colors.white, // Background color for the dialog
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min, // To make the dialog compact
+              children: [
+                Icon(
+                  Icons.check_circle_outline,
+                  color: Colors.green,
+                  size: 80,
+                ), // Success icon
+                SizedBox(height: 20),
+                Text(
+                  'Request Submitted',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ), // TextStyle for the title
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 15),
+                Text(
+                  'Your request is pending. Please wait for approval.',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.grey[700],
+                  ), // TextStyle for the message
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 30),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close the dialog
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30.0),
+                    ),
+                    backgroundColor: Colors.blue, // Button color
+                  ),
+                  child: Text(
+                    'OK',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ), // Button text style
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   // Submit form and save request in Firestore
@@ -295,9 +366,8 @@ class _UserAmbulanceFormScreenState extends State<UserAmbulanceFormScreen> {
       _selectedRequestType = null; // Reset selected fields
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Your request is pending')),
-    );
+    // Show the custom VIP dialog
+    _showCustomDialog();
   }
 
   // Logout function
@@ -476,10 +546,10 @@ class _UserAmbulanceFormScreenState extends State<UserAmbulanceFormScreen> {
                         child: ElevatedButton(
                           onPressed: _submitForm,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.primaryColor,
+                            backgroundColor: Colors.redAccent,
                             padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                           ),
-                          child: Text('Submit Request', style: TextStyle(fontSize: 18)),
+                          child: Text('Submit Request', style: TextStyle(fontSize: 18,color: Colors.white)),
                         ),
                       ),
                     ],

@@ -355,26 +355,34 @@ class DriverAdminPage extends StatelessWidget {
     );
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Driver Admin Panel'),
+        title: Text('Driver Admin Panel', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        elevation: 8.0,
+        centerTitle: true,
+        backgroundColor: Colors.redAccent[900],
+        leading: Icon(Icons.directions_car_rounded, color: Colors.white),
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
-            onPressed: () => logoutUser(context), // Pass the context to logoutUser function
+            onPressed: () => logoutUser(context),
           ),
-
-          SizedBox(width: 10),
-
-          IconButton(onPressed: (){
-            Navigator.push(context, MaterialPageRoute(builder: (context) => DriveMap(),));
-          }, icon: Icon(Icons.access_time_rounded))
+          IconButton(
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => DriveMap()), // Navigate to login screen
+              );            },
+            icon: Icon(Icons.map_outlined),
+          ),
         ],
       ),
+      backgroundColor: Colors.grey[200], // Set background color for the whole panel
       body: FutureBuilder(
-        future: _fetchDriverInfo(), // Fetch driver info when building the page
+        future: _fetchDriverInfo(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
@@ -383,7 +391,6 @@ class DriverAdminPage extends StatelessWidget {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
 
-          // Now the driver's information is saved in SharedPreferences, proceed with your StreamBuilder
           return StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
                 .collection('pendingRequests')
@@ -393,6 +400,7 @@ class DriverAdminPage extends StatelessWidget {
               if (!snapshot.hasData) {
                 return Center(child: CircularProgressIndicator());
               }
+
               final requests = snapshot.data!.docs;
               return ListView.builder(
                 itemCount: requests.length,
@@ -400,32 +408,93 @@ class DriverAdminPage extends StatelessWidget {
                   var request = requests[index].data() as Map<String, dynamic>;
                   var requestId = requests[index].id;
 
-                  return ListTile(
-                    title: Column(
-                      children: [
-                        Text("Name: ${request['patientName'] ?? 'Unknown'}",style: TextStyle(fontWeight: FontWeight.bold),), // Default to 'Unknown' if null
-                        Text("Hospital: ${request['hospitalName'] ?? 'Unknown'}",style: TextStyle(fontWeight: FontWeight.bold),),
-                        Text("Mobile: ${request['mobileNumber'] ?? 'N/A'}",style: TextStyle(fontWeight: FontWeight.bold),),
-                        Text("Address: ${request['location'] ?? 'Unknown'}",style: TextStyle(fontWeight: FontWeight.bold),),
-                        Text("Zip Code: ${request['zipCode'] ?? 'Unknown'}",style: TextStyle(fontWeight: FontWeight.bold),),
-                      ],
-                    ),
-
-
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ElevatedButton(
-                          onPressed: () => _acceptRequest(context, requestId, request), // Call the accept method
-                          child: Text('Accept'),
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                    child: Card(
+                      elevation: 6.0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15.0),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.person_outline, color: Colors.blueAccent),
+                                SizedBox(width: 10),
+                                Text(
+                                  "Patient: ${request['patientName'] ?? 'Unknown'}",
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Icon(Icons.local_hospital_outlined, color: Colors.redAccent),
+                                SizedBox(width: 10),
+                                Text(
+                                  "Hospital: ${request['hospitalName'] ?? 'Unknown'}",
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Icon(Icons.phone_android, color: Colors.green),
+                                SizedBox(width: 10),
+                                Text(
+                                  "Mobile: ${request['mobileNumber'] ?? 'N/A'}",
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Icon(Icons.location_on_outlined, color: Colors.orangeAccent),
+                                SizedBox(width: 10),
+                                Text(
+                                  "Address: ${request['location'] ?? 'Unknown'}",
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                ElevatedButton(
+                                  onPressed: () => _acceptRequest(context, requestId, request),
+                                  child: Text('Accept',style: TextStyle(color: Colors.white),),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.green,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () => _rejectRequest(context, requestId, request),
+                                  child: Text('Reject' ,style: TextStyle(color: Colors.white),),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.red, // Reject button color
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                        SizedBox(width: 8), // Add spacing between the buttons
-                        ElevatedButton(
-                          onPressed: () => _rejectRequest(context, requestId, request), // Call the reject method
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.red), // Red button for rejection
-                          child: Text('Reject'),
-                        ),
-                      ],
+                      ),
                     ),
                   );
                 },
